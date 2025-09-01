@@ -1,4 +1,5 @@
 # 🚀 Common CDK Constructs Library
+This is an NPM package created with the help of Cursor AI
 
 A production-ready library of reusable AWS CDK constructs for rapidly building cloud infrastructure. This library provides common patterns, best practices, and reusable components to make your next CDK deployment extremely fast and easy.
 
