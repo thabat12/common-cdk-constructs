@@ -60,9 +60,11 @@ export class MonitoringStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: MonitoringStackProps) {
     super(scope, id, props);
 
-    const enableDetailedMonitoring = props.enableDetailedMonitoring ?? true;
+    // TODO: Implement detailed monitoring functionality
+    // const enableDetailedMonitoring = props.enableDetailedMonitoring ?? true;
     const enableSnsNotifications = props.enableSnsNotifications ?? true;
-    const enableXRay = props.enableXRay ?? false;
+    // TODO: Implement X-Ray functionality
+    // const enableXRay = props.enableXRay ?? false;
     const logRetentionDays = props.logRetentionDays || 30;
 
     // Create SNS topic for alarms if notifications are enabled

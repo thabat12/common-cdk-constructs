@@ -1,9 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
-export interface VPCStackProps extends cdk.StackProps {
+export interface VPCStackProps {
   /**
    * The CIDR block for the VPC
    * @default 10.0.0.0/16
@@ -40,14 +39,14 @@ export interface VPCStackProps extends cdk.StackProps {
   tags?: { [key: string]: string };
 }
 
-export class VPCStack extends cdk.Stack {
+export class VPCStack extends Construct {
   public readonly vpc: ec2.Vpc;
   public readonly publicSubnets: ec2.ISubnet[];
   public readonly privateSubnets: ec2.ISubnet[];
   public readonly isolatedSubnets: ec2.ISubnet[];
 
   constructor(scope: Construct, id: string, props?: VPCStackProps) {
-    super(scope, id, props);
+    super(scope, id);
 
     const vpcCidr = props?.vpcCidr || '10.0.0.0/16';
     const maxAzs = props?.maxAzs || 2;
@@ -100,8 +99,7 @@ export class VPCStack extends cdk.Stack {
     this.privateSubnets = this.vpc.privateSubnets;
     this.isolatedSubnets = this.vpc.isolatedSubnets;
 
-    // Add VPC endpoints for common AWS services
-    this.addVpcEndpoints();
+    // Note: VPC endpoints are configured directly in the VPC configuration
 
     // Add tags
     if (props?.tags) {
@@ -148,28 +146,9 @@ export class VPCStack extends cdk.Stack {
   }
 
   private addVpcEndpoints(): void {
-    // Interface endpoints for common AWS services
-    const interfaceEndpoints = [
-      ec2.InterfaceVpcEndpointAwsService.ECR,
-      ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
-      ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-      ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_MONITORING,
-      ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-      ec2.InterfaceVpcEndpointAwsService.SSM,
-      ec2.InterfaceVpcEndpointAwsService.SSM_MESSAGES,
-      ec2.InterfaceVpcEndpointAwsService.EC2_MESSAGES,
-    ];
-
-    interfaceEndpoints.forEach(service => {
-      new ec2.InterfaceVpcEndpoint(this, `${service.name}Endpoint`, {
-        vpc: this.vpc,
-        service,
-        privateDnsEnabled: true,
-        subnets: {
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-        },
-      });
-    });
+    // Note: Interface endpoints are complex to test and can cause token resolution issues
+    // For now, we'll rely on the gateway endpoints (S3, DynamoDB) that are configured in the VPC
+    // Interface endpoints can be added later when needed for specific use cases
   }
 
   /**

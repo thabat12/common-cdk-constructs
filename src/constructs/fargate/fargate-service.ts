@@ -291,7 +291,7 @@ export class FargateService extends Construct {
     }
 
     // Add container to task definition
-    const container = this.taskDefinition.addContainer('Container', {
+    this.taskDefinition.addContainer('Container', {
       image: containerImage,
       containerName: props.serviceName,
       logging: ecs.LogDrivers.awsLogs({
@@ -507,7 +507,7 @@ export class FargateService extends Construct {
   /**
    * Update the service with a new task definition
    */
-  public updateService(newTaskDefinition: ecs.FargateTaskDefinition): void {
+  public updateService(_newTaskDefinition: ecs.FargateTaskDefinition): void {
     if (this.targetGroup) {
       this.service.attachToApplicationTargetGroup(this.targetGroup);
     }
