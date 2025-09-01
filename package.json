@@ -16,13 +16,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:constructs": "jest --testPathPattern=constructs",
-    "test:stacks": "jest --testPathPattern=stacks",
-    "test:snapshots": "jest --updateSnapshot",
     "test:fargate": "jest --testPathPattern=fargate",
     "test:vpc": "jest --testPathPattern=vpc",
     "test:unit": "jest --testPathPattern=__tests__",
     "test:integration": "jest --testPathPattern=integration",
+    "test:all": "npm run lint:check && npm run test && npm run build",
     "cdk": "cdk",
     "deploy": "npm run build && cdk deploy --all",
     "deploy:dev": "npm run build && cdk deploy --all --context environment=dev",
@@ -35,8 +33,6 @@
     "synth:production": "npm run build && cdk synth --context environment=production",
     "destroy": "cdk destroy --all",
     "bootstrap": "cdk bootstrap",
-    "cost:estimate": "npm run build && cdk diff --context environment=production",
-    "cost:current": "aws ce get-cost-and-usage --time-period Start=2024-01-01,End=2024-12-31 --granularity MONTHLY --metrics BlendedCost",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint --fix . --ext .ts",
     "lint:check": "eslint . --ext .ts --max-warnings 0",
@@ -44,10 +40,7 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run lint && npm run build",
-    "validate": "npm run lint:check && npm run format:check && npm run test && npm run build",
-    "test:all": "npm run lint:check && npm run test && npm run build",
-    "example:create": "node scripts/create-example.js",
-    "example:deploy": "cd examples/generated && npm run deploy"
+    "validate": "npm run lint:check && npm run format:check && npm run test && npm run build"
   },
   "keywords": [
     "aws",
@@ -97,7 +90,6 @@
   "dependencies": {
     "aws-cdk-lib": "^2.100.0",
     "constructs": "^10.0.0",
-    "dotenv": "^16.3.1",
     "source-map-support": "^0.5.21"
   },
   "peerDependencies": {

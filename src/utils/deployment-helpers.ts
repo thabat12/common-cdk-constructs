@@ -116,8 +116,7 @@ export function validateEnvironmentVariables(
  */
 export function getFargateConfig(
   environment: string,
-  config: Record<string, unknown>,
-  env: { [key: string]: string | undefined }
+  config: Record<string, unknown>
 ): {
   cpu: number;
   memory: number;
@@ -125,11 +124,11 @@ export function getFargateConfig(
   maxCapacity: number;
 } {
   return {
-    cpu: parseInt((config.fargateCpu as string) || env.FARGATE_CPU || '256'),
-    memory: parseInt((config.fargateMemory as string) || env.FARGATE_MEMORY || '512'),
-    desiredCount: parseInt((config.desiredCount as string) || env.DESIRED_COUNT || '1'),
+    cpu: parseInt((config.fargateCpu as string) || '256'),
+    memory: parseInt((config.fargateMemory as string) || '512'),
+    desiredCount: parseInt((config.desiredCount as string) || '1'),
     maxCapacity: parseInt(
-      (config.autoScalingMaxCapacity as string) || env.AUTO_SCALING_MAX_CAPACITY || '5'
+      (config.autoScalingMaxCapacity as string) || '5'
     ),
   };
 }
