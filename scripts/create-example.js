@@ -105,7 +105,7 @@ function generatePackageJson(projectName) {
     "typescript": "~5.0.0"
   },
   "dependencies": {
-    "@your-org/cdk-fargate-scaffold": "^1.0.0",
+    "@thabat12/cdk-fargate-scaffold": "^1.0.0",
     "aws-cdk-lib": "^2.100.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21",

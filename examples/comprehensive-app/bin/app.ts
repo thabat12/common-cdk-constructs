@@ -9,7 +9,7 @@ import {
   MonitoringStack,
   DatabaseStack,
   CICDStack,
-} from '@your-org/cdk-fargate-scaffold';
+} from '@thabat12/cdk-fargate-scaffold';
 
 // Load environment variables
 dotenv.config();

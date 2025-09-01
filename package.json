@@ -1,5 +1,5 @@
 {
-  "name": "@your-org/cdk-fargate-scaffold",
+  "name": "@thabat12/cdk-fargate-scaffold",
   "version": "1.0.0",
   "description": "Production-ready CDK scaffold for rapid Fargate deployments",
   "main": "dist/index.js",
@@ -60,12 +60,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/cdk-fargate-scaffold.git"
+    "url": "git+https://github.com/thabat12/common-cdk-constructs.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/cdk-fargate-scaffold/issues"
+    "url": "https://github.com/thabat12/common-cdk-constructs/issues"
   },
-  "homepage": "https://github.com/your-org/cdk-fargate-scaffold#readme",
+  "homepage": "https://github.com/thabat12/common-cdk-constructs#readme",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"

@@ -19,7 +19,7 @@ A production-ready VPC construct with comprehensive networking features.
 
 **Usage:**
 ```typescript
-import { VPCStack } from '@your-org/cdk-fargate-scaffold';
+import { VPCStack } from '@thabat12/cdk-fargate-scaffold';
 
 const vpcStack = new VPCStack(app, 'MyVPCStack', {
   vpcCidr: '10.0.0.0/16',
@@ -41,7 +41,7 @@ Comprehensive security infrastructure with KMS, IAM roles, and security groups.
 
 **Usage:**
 ```typescript
-import { SecurityStack } from '@your-org/cdk-fargate-scaffold';
+import { SecurityStack } from '@thabat12/cdk-fargate-scaffold';
 
 const securityStack = new SecurityStack(app, 'MySecurityStack', {
   vpc: vpcStack.vpc,
@@ -68,7 +68,7 @@ Complete Fargate service deployment with auto-scaling and load balancing.
 
 **Usage:**
 ```typescript
-import { FargateService } from '@your-org/cdk-fargate-scaffold';
+import { FargateService } from '@thabat12/cdk-fargate-scaffold';
 
 const fargateService = new FargateService(app, 'MyFargateService', {
   vpc: vpcStack.vpc,
@@ -96,7 +96,7 @@ Comprehensive monitoring infrastructure with CloudWatch and SNS.
 
 **Usage:**
 ```typescript
-import { MonitoringStack } from '@your-org/cdk-fargate-scaffold';
+import { MonitoringStack } from '@thabat12/cdk-fargate-scaffold';
 
 const monitoringStack = new MonitoringStack(app, 'MyMonitoringStack', {
   appName: 'my-app',
@@ -122,7 +122,7 @@ Flexible database infrastructure supporting RDS and DynamoDB.
 
 **Usage:**
 ```typescript
-import { DatabaseStack } from '@your-org/cdk-fargate-scaffold';
+import { DatabaseStack } from '@thabat12/cdk-fargate-scaffold';
 
 const databaseStack = new DatabaseStack(app, 'MyDatabaseStack', {
   vpc: vpcStack.vpc,
@@ -149,7 +149,7 @@ Complete CI/CD pipeline with CodePipeline and CodeBuild.
 
 **Usage:**
 ```typescript
-import { CICDStack } from '@your-org/cdk-fargate-scaffold';
+import { CICDStack } from '@thabat12/cdk-fargate-scaffold';
 
 const cicdStack = new CICDStack(app, 'MyCICDStack', {
   appName: 'my-app',
@@ -309,24 +309,24 @@ NOTIFICATION_EMAILS=admin@example.com
 
 1. **Install the package:**
    ```bash
-   npm install @your-org/cdk-fargate-scaffold
+   npm install @thabat12/cdk-fargate-scaffold
    ```
 
 2. **Import constructs:**
    ```typescript
-   import { VPCStack, FargateService, MonitoringStack } from '@your-org/cdk-fargate-scaffold';
+   import { VPCStack, FargateService, MonitoringStack } from '@thabat12/cdk-fargate-scaffold';
    ```
 
 3. **Use in your CDK app:**
-   ```typescript
-   const vpc = new VPCStack(app, 'VPC', { /* config */ });
-   const service = new FargateService(app, 'Service', { vpc: vpc.vpc, /* config */ });
-   ```
+     ```typescript
+     const vpc = new VPCStack(app, 'VPC', { /* config */ });
+     const service = new FargateService(app, 'Service', { vpc: vpc.vpc, /* config */ });
+     ```
 
 4. **Deploy:**
-   ```bash
-   npx cdk deploy --all
-   ```
+     ```bash
+     npx cdk deploy --all
+     ```
 
 ## 🤝 **Contributing**
 
