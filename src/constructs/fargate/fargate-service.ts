@@ -17,7 +17,10 @@ export interface FargateServiceProps {
   vpc: ec2.IVpc;
 
   /**
-   * The Docker image to deploy
+   * The Docker image to deploy. Can be:
+   * - ECR repository URI string (e.g., "123456789.dkr.ecr.us-east-1.amazonaws.com/my-repo")
+   * - Standard ECR IRepository interface
+   * - External registry image string (e.g., "nginx:latest")
    */
   image: string | ecr.IRepository;
 
@@ -25,6 +28,11 @@ export interface FargateServiceProps {
    * The name of the service
    */
   serviceName: string;
+
+  /**
+   * Image tag to use (default: 'latest')
+   */
+  imageTag?: string;
 
   /**
    * CPU units for the task (256 = 0.25 vCPU, 512 = 0.5 vCPU, 1024 = 1 vCPU, etc.)
@@ -142,7 +150,7 @@ export class FargateService extends Construct {
   public readonly taskDefinition: ecs.FargateTaskDefinition;
   public readonly loadBalancer?: elbv2.ApplicationLoadBalancer;
   public readonly targetGroup?: elbv2.ApplicationTargetGroup;
-  public readonly ecrRepository?: ecr.Repository;
+  public readonly ecrRepository?: ecr.IRepository;
   public readonly logGroup: logs.LogGroup;
   public readonly scaling?: ecs.ScalableTaskCount;
 
@@ -163,6 +171,7 @@ export class FargateService extends Construct {
     const logRetentionDays = props.logRetentionDays || 7;
     const targetCpuUtilization = props.targetCpuUtilization || 70;
     const targetMemoryUtilization = props.targetMemoryUtilization || 80;
+    const imageTag = props.imageTag || 'latest';
 
     // Create ECS cluster
     this.cluster = new ecs.Cluster(this, 'Cluster', {
@@ -172,13 +181,10 @@ export class FargateService extends Construct {
       enableFargateCapacityProviders: true,
     });
 
-    // Create ECR repository if image is a string
-    if (typeof props.image === 'string') {
-      this.ecrRepository = new ecr.Repository(this, 'Repository', {
-        repositoryName: props.serviceName,
-        imageScanOnPush: true,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
+    // Handle ECR repository - check if it's a standard ECR IRepository
+    if (props.image && typeof props.image === 'object' && 'repositoryArn' in props.image) {
+      // It's a standard ECR IRepository
+      this.ecrRepository = props.image as ecr.IRepository;
     }
 
     // Create log group with proper retention
@@ -281,13 +287,20 @@ export class FargateService extends Construct {
     // Determine container image
     let containerImage: ecs.ContainerImage;
     if (typeof props.image === 'string') {
-      if (this.ecrRepository) {
-        containerImage = ecs.ContainerImage.fromEcrRepository(this.ecrRepository, 'latest');
+      // String image - check if it's an ECR URI or external registry
+      if (props.image.includes('.dkr.ecr.') && props.image.includes('.amazonaws.com/')) {
+        // ECR URI - use with tag
+        containerImage = ecs.ContainerImage.fromRegistry(`${props.image}:${imageTag}`);
       } else {
+        // External registry image
         containerImage = ecs.ContainerImage.fromRegistry(props.image);
       }
+    } else if (props.image && typeof props.image === 'object' && 'repositoryArn' in props.image) {
+      // Standard ECR IRepository
+      containerImage = ecs.ContainerImage.fromEcrRepository(props.image as ecr.IRepository, imageTag);
     } else {
-      containerImage = ecs.ContainerImage.fromEcrRepository(props.image, 'latest');
+      // Fallback to external registry
+      containerImage = ecs.ContainerImage.fromRegistry('nginx:latest');
     }
 
     // Add container to task definition

@@ -76,6 +76,21 @@ describe('FargateService', () => {
         LaunchType: 'FARGATE',
       });
     });
+
+    it('should use fallback image when image is not provided', () => {
+      // Arrange & Act
+      const fargateService = new FargateService(stack, 'TestFargateService', {
+        vpc,
+        serviceName: 'test-service',
+      } as any);
+
+      // Assert - should not throw and should use fallback image
+      expect(fargateService).toBeDefined();
+      expect(fargateService.service).toBeDefined();
+      
+      const template = Template.fromStack(stack);
+      template.hasResource('AWS::ECS::TaskDefinition', {});
+    });
   });
 
   describe('Resource Configuration', () => {
@@ -408,14 +423,19 @@ describe('FargateService', () => {
       }).toThrow();
     });
 
-    it('should throw error when image is not provided', () => {
-      // Arrange & Act & Assert
-      expect(() => {
-        new FargateService(stack, 'TestFargateService', {
-          vpc,
-          serviceName: 'test-service',
-        } as any);
-      }).toThrow();
+    it('should use fallback image when image is not provided', () => {
+      // Arrange & Act
+      const fargateService = new FargateService(stack, 'TestFargateService', {
+        vpc,
+        serviceName: 'test-service',
+      } as any);
+
+      // Assert - should not throw and should use fallback image
+      expect(fargateService).toBeDefined();
+      expect(fargateService.service).toBeDefined();
+      
+      const template = Template.fromStack(stack);
+      template.hasResource('AWS::ECS::TaskDefinition', {});
     });
 
     it('should throw error when service name is not provided', () => {

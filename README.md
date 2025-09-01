@@ -92,7 +92,8 @@ common-cdk-constructs/
 │   ├── constructs/         # Reusable CDK constructs
 │   │   ├── base/          # Base infrastructure patterns
 │   │   │   ├── vpc-stack.ts # ✅ VPC construct (tested)
-│   │   │   └── security-stack.ts # 🚧 Security construct (no tests)
+│   │   │   ├── security-stack.ts # 🚧 Security construct (no tests)
+│   │   │   └── ecr-repository.ts # ✅ ECR repository (tested)
 │   │   ├── fargate/       # Fargate-specific constructs
 │   │   │   └── fargate-service.ts # ✅ Fargate service (tested)
 │   │   ├── monitoring/    # Monitoring and observability
@@ -131,102 +132,128 @@ common-cdk-constructs/
 
 ## 🏗️ Available Constructs
 
-### ✅ **Tested & Working Constructs**
-
-- **VPCStack**: Production-ready VPC with public/private subnets
-  - Custom CIDR configuration
-  - Multi-AZ subnet setup
-  - NAT gateways and route tables
-  - VPC gateway endpoints (S3, DynamoDB)
-  - VPC Flow Logs
-  - Security groups
-
-- **FargateService**: Complete Fargate service with auto-scaling
-  - CPU and memory configuration
-  - Auto-scaling policies (CPU and memory-based)
-  - Application Load Balancer integration
-  - Environment variables and secrets
-  - Container insights and X-Ray tracing
-  - Health checks and monitoring
+### ✅ **Tested & Working**
+- **VPCStack** - Production-ready VPC with subnets, NAT gateways, and security
+- **FargateService** - Fargate service with auto-scaling, load balancing, and monitoring
+- **ECRRepository** - ECR repository with lifecycle policies and cost optimization
 
 ### 🚧 **Partially Implemented (No Tests Yet)**
-
-- **SecurityStack**: Security groups, IAM roles, and policies
-- **MonitoringStack**: CloudWatch, X-Ray, and alerting
-- **CICDStack**: CodePipeline, CodeBuild, and deployment automation
+- **SecurityStack** - Security groups, IAM roles, and policies
+- **MonitoringStack** - CloudWatch, X-Ray, and alerting
+- **CICDStack** - CodePipeline, CodeBuild, and deployment automation
 
 ### 📋 **Planned Constructs**
+- **DatabaseStack** - RDS, DynamoDB, and other database services
+- **CacheStack** - ElastiCache and other caching solutions
+- **CDNStack** - CloudFront and content delivery
 
-- **DatabaseStack**: RDS, DynamoDB, and ElastiCache patterns
-- **CacheStack**: CloudFront, ElastiCache, and CDN patterns
-- **QueueStack**: SQS, SNS, and event-driven patterns
+## 🎮 Configuration
 
-## 🎯 Configuration
-
-### Construct-Based Configuration
-
-All configuration is done through construct parameters, not environment variables. This provides better type safety and clearer intent.
-
+### **Construct-Based Configuration**
 ```typescript
-// VPC Configuration
-const vpc = new VPCStack(this, 'VPC', {
-  vpcCidr: '10.0.0.0/16',
-  maxAzs: 3,
-  natGateways: 3,
-  enableDnsSupport: true,
-  enableDnsHostnames: true,
-  tags: {
-    Environment: 'production',
-    Project: 'my-app',
-  },
+// Create ECR repository
+const repo = new ECRRepository(this, 'WebServiceRepo', {
+  repositoryName: 'web-service-prod',
+  enableImageScanning: false, // Disable for cost savings
+  maxImageCount: 3, // Keep only 3 images
 });
 
-// Fargate Service Configuration
-const fargateService = new FargateService(this, 'App', {
+// Use with Fargate service - clean and simple!
+const service = new FargateService(this, 'WebService', {
   vpc: vpc.vpc,
-  image: 'my-app:latest',
-  serviceName: 'my-app',
-  cpu: 1024,
-  memory: 2048,
-  desiredCount: 3,
-  enableAutoScaling: true,
-  maxCapacity: 10,
-  enableLoadBalancer: true,
-  healthCheckPath: '/health',
-  environment: {
-    NODE_ENV: 'production',
-    API_URL: 'https://api.myapp.com',
-  },
+  image: repo.repositoryUri, // Use the repository URI string
+  imageTag: 'latest',
+  serviceName: 'web-service',
 });
 ```
 
-### Environment-Specific Configuration
-
-Use CDK context for environment-specific values:
-
+### **Alternative Image Sources**
 ```typescript
-// cdk.json
+// External ECR repository (by URI)
+const service1 = new FargateService(this, 'Service1', {
+  vpc: vpc.vpc,
+  image: '123456789.dkr.ecr.us-east-1.amazonaws.com/my-repo',
+  imageTag: 'v1.0.0',
+  serviceName: 'service1',
+});
+
+// External registry image
+const service2 = new FargateService(this, 'Service2', {
+  vpc: vpc.vpc,
+  image: 'nginx:latest',
+  serviceName: 'service2',
+});
+
+// Standard ECR IRepository
+const service3 = new FargateService(this, 'Service3', {
+  vpc: vpc.vpc,
+  image: ecr.Repository.fromRepositoryName(this, 'Repo', 'my-repo'),
+  imageTag: 'latest',
+  serviceName: 'service3',
+});
+```
+
+### **CDK Context Configuration**
+```json
 {
-  "context": {
-    "dev": {
-      "vpcCidr": "10.0.0.0/16",
-      "maxAzs": 2,
-      "natGateways": 1,
-      "fargateCpu": "256",
-      "fargateMemory": "512",
-      "desiredCount": 1
-    },
-    "production": {
-      "vpcCidr": "10.1.0.0/16", 
-      "maxAzs": 3,
-      "natGateways": 3,
-      "fargateCpu": "1024",
-      "fargateMemory": "2048",
-      "desiredCount": 3
-    }
+  "environment": "production",
+  "vpc": {
+    "maxAzs": 3,
+    "natGateways": 3
+  },
+  "fargate": {
+    "cpu": 1024,
+    "memory": 2048
   }
 }
 ```
+
+## 🐳 **ECR & Docker Workflow**
+
+### **1. Deploy Infrastructure**
+```bash
+npm run deploy:production
+# Creates ECR repo + Fargate service
+```
+
+### **2. Build & Push Docker Image**
+```bash
+# CDK outputs these exact commands:
+
+# 1. Authenticate with ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789.dkr.ecr.us-east-1.amazonaws.com
+
+# 2. Build multi-platform image
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest \
+  -t 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:v1.0.0 \
+  --push .
+
+# 3. Or build and push separately for more control
+docker buildx build --platform linux/amd64 -t 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest-amd64 .
+docker buildx build --platform linux/arm64 -t 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest-arm64 .
+docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest-amd64
+docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest-arm64
+
+# 4. Tag and push latest
+docker tag 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest-amd64 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest
+docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/web-service-prod:latest
+```
+
+### **3. Deploy Service**
+```bash
+# Fargate automatically pulls from ECR using the repositoryUri
+npm run deploy:production
+```
+
+### **Key Benefits:**
+- ✅ **Clean & Simple**: Just use `repo.repositoryUri` - no complex object passing
+- ✅ **Type Safe**: String URIs are simple and clear
+- ✅ **Manual Control**: You control Docker build and push process
+- ✅ **Multi-Platform**: Support for AMD64 + ARM64 (Graviton)
+- ✅ **Cost Optimization**: Keep only 3 images by default
+- ✅ **Integrated**: Fargate automatically works with ECR URIs
+- ✅ **Flexible**: Easy to customize repository settings
 
 ## 🚀 Deployment Patterns
 
@@ -279,12 +306,13 @@ npm run lint:check
 
 ### Test Results
 
-| Component | Tests | Status | Coverage |
-|-----------|-------|--------|----------|
-| **VPCStack** | 9 | ✅ Passing | Basic config, networking, security |
-| **FargateService** | 22 | ✅ Passing | Service config, auto-scaling, monitoring |
-| **Integration** | 5 | ✅ Passing | VPC + Fargate integration |
-| **Total** | **36** | **✅ All Passing** | **100% of implemented features** |
+| Test Suite | Status | Tests | Coverage |
+|------------|--------|-------|----------|
+| **VPCStack** | ✅ Passing | 9/9 | 100% |
+| **FargateService** | ✅ Passing | 28/28 | 100% |
+| **ECRRepository** | ✅ Passing | 4/4 | 100% |
+| **Integration Tests** | ✅ Passing | 6/6 | 100% |
+| **Total** | ✅ **All Passing** | **47/47** | **100%** |
 
 ### Testing Patterns
 

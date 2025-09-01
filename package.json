@@ -18,6 +18,7 @@
     "test:coverage": "jest --coverage",
     "test:fargate": "jest --testPathPattern=fargate",
     "test:vpc": "jest --testPathPattern=vpc",
+    "test:ecr": "jest --testPathPattern=ecr",
     "test:unit": "jest --testPathPattern=__tests__",
     "test:integration": "jest --testPathPattern=integration",
     "test:all": "npm run lint:check && npm run test && npm run build",
