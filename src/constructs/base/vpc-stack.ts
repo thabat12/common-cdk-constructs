@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 export interface VPCStackProps extends cdk.StackProps {
@@ -34,12 +35,6 @@ export interface VPCStackProps extends cdk.StackProps {
   enableDnsHostnames?: boolean;
   
   /**
-   * Whether to enable IPv6
-   * @default false
-   */
-  enableIpv6?: boolean;
-  
-  /**
    * Tags to apply to the VPC
    */
   tags?: { [key: string]: string };
@@ -59,7 +54,6 @@ export class VPCStack extends cdk.Stack {
     const natGateways = props?.natGateways || 1;
     const enableDnsSupport = props?.enableDnsSupport ?? true;
     const enableDnsHostnames = props?.enableDnsHostnames ?? true;
-    const enableIpv6 = props?.enableIpv6 ?? false;
 
     // Create VPC with public and private subnets
     this.vpc = new ec2.Vpc(this, 'VPC', {
@@ -68,7 +62,6 @@ export class VPCStack extends cdk.Stack {
       natGateways,
       enableDnsSupport,
       enableDnsHostnames,
-      enableIpv6,
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -94,10 +87,11 @@ export class VPCStack extends cdk.Stack {
           service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
         },
       },
-      vpcFlowLogs: {
-        trafficType: ec2.FlowLogTrafficType.ALL,
-        maxAggregationInterval: cdk.Duration.minutes(10),
-        retention: cdk.aws_logs.RetentionDays.ONE_WEEK,
+      flowLogs: {
+        default: {
+          trafficType: ec2.FlowLogTrafficType.ALL,
+          maxAggregationInterval: ec2.FlowLogMaxAggregationInterval.TEN_MINUTES,
+        },
       },
     });
 

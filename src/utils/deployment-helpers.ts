@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import { Construct } from 'constructs';
 
 /**
  * Utility functions for common deployment operations
@@ -9,7 +10,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 /**
  * Get environment-specific configuration from CDK context
  */
-export function getEnvironmentConfig(scope: cdk.Construct, environment: string): any {
+export function getEnvironmentConfig(scope: Construct, environment: string): any {
   return scope.node.tryGetContext(environment) || {};
 }
 
@@ -38,7 +39,7 @@ export function createStandardTags(
  * Apply tags to a CDK construct
  */
 export function applyTags(
-  construct: cdk.Construct,
+  construct: Construct,
   tags: { [key: string]: string }
 ): void {
   Object.entries(tags).forEach(([key, value]) => {
@@ -62,7 +63,7 @@ export function getSubnetSelection(
  * Create a security group with common rules
  */
 export function createSecurityGroup(
-  scope: cdk.Construct,
+  scope: Construct,
   id: string,
   vpc: ec2.IVpc,
   description: string,
@@ -99,7 +100,7 @@ export function createSecurityGroup(
  */
 export function validateEnvironmentVariables(
   requiredVars: string[],
-  env: NodeJS.ProcessEnv
+  env: { [key: string]: string | undefined }
 ): void {
   const missingVars = requiredVars.filter(envVar => !env[envVar]);
 
@@ -116,7 +117,7 @@ export function validateEnvironmentVariables(
 export function getFargateConfig(
   environment: string,
   config: any,
-  env: NodeJS.ProcessEnv
+  env: { [key: string]: string | undefined }
 ): {
   cpu: number;
   memory: number;

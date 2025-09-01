@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 /**
  * Configuration helper utilities for managing environment-specific settings
@@ -89,8 +90,8 @@ export const DEFAULT_ENVIRONMENTS: { [key: string]: EnvironmentConfig } = {
 /**
  * Get environment configuration with defaults
  */
-export function getEnvironmentConfig(
-  scope: cdk.Construct,
+export function getEnvironmentConfigFromContext(
+  scope: Construct,
   environment: string
 ): EnvironmentConfig {
   const contextConfig = scope.node.tryGetContext(environment) || {};
@@ -185,7 +186,7 @@ export function getCostAllocationTags(
  * Parse environment variables with defaults
  */
 export function parseEnvironmentVariables(
-  env: NodeJS.ProcessEnv,
+  env: { [key: string]: string | undefined },
   defaults: { [key: string]: string }
 ): { [key: string]: string } {
   const result: { [key: string]: string } = {};

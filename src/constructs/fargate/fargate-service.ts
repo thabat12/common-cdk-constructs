@@ -144,7 +144,7 @@ export class FargateService extends Construct {
   public readonly targetGroup?: elbv2.ApplicationTargetGroup;
   public readonly ecrRepository?: ecr.Repository;
   public readonly logGroup: logs.LogGroup;
-  public readonly scaling: ecs.ScalableTaskCount;
+  public readonly scaling?: ecs.ScalableTaskCount;
 
   constructor(scope: Construct, id: string, props: FargateServiceProps) {
     super(scope, id);
@@ -181,10 +181,52 @@ export class FargateService extends Construct {
       });
     }
 
-    // Create log group
+    // Create log group with proper retention
+    let retention: logs.RetentionDays;
+    switch (logRetentionDays) {
+      case 1:
+        retention = logs.RetentionDays.ONE_DAY;
+        break;
+      case 3:
+        retention = logs.RetentionDays.THREE_DAYS;
+        break;
+      case 5:
+        retention = logs.RetentionDays.FIVE_DAYS;
+        break;
+      case 7:
+        retention = logs.RetentionDays.ONE_WEEK;
+        break;
+      case 14:
+        retention = logs.RetentionDays.TWO_WEEKS;
+        break;
+      case 30:
+        retention = logs.RetentionDays.ONE_MONTH;
+        break;
+      case 60:
+        retention = logs.RetentionDays.TWO_MONTHS;
+        break;
+      case 90:
+        retention = logs.RetentionDays.THREE_MONTHS;
+        break;
+      case 120:
+        retention = logs.RetentionDays.FOUR_MONTHS;
+        break;
+      case 150:
+        retention = logs.RetentionDays.FIVE_MONTHS;
+        break;
+      case 180:
+        retention = logs.RetentionDays.SIX_MONTHS;
+        break;
+      case 365:
+        retention = logs.RetentionDays.ONE_YEAR;
+        break;
+      default:
+        retention = logs.RetentionDays.ONE_WEEK;
+    }
+
     this.logGroup = new logs.LogGroup(this, 'LogGroup', {
       logGroupName: `/ecs/${props.serviceName}`,
-      retention: logs.RetentionDays[logRetentionDays as keyof typeof logs.RetentionDays] || logs.RetentionDays.ONE_WEEK,
+      retention,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -316,14 +358,12 @@ export class FargateService extends Construct {
       },
       securityGroups: props.securityGroups,
       enableExecuteCommand: true,
-      loadBalancers: this.targetGroup ? [
-        {
-          targetGroup: this.targetGroup,
-          containerName: props.serviceName,
-          containerPort,
-        },
-      ] : undefined,
     });
+
+    // Attach to load balancer if enabled
+    if (this.targetGroup) {
+      this.service.attachToApplicationTargetGroup(this.targetGroup);
+    }
 
     // Enable auto-scaling if requested
     if (enableAutoScaling) {
@@ -411,14 +451,23 @@ export class FargateService extends Construct {
       alarmName: `${this.service.serviceName}-Memory-High`,
     });
 
-    // Service health alarm
+    // Service health alarm (using custom metric for service health)
     const healthAlarm = new cloudwatch.Alarm(this, 'ServiceHealthAlarm', {
-      metric: this.service.metricHealthyTaskCount(),
+      metric: new cloudwatch.Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'ServiceCount',
+        dimensionsMap: {
+          ServiceName: this.service.serviceName,
+          ClusterName: this.cluster.clusterName,
+        },
+        statistic: 'Average',
+        period: cdk.Duration.minutes(1),
+      }),
       threshold: 1,
       evaluationPeriods: 1,
       comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
-      alarmDescription: 'Service has no healthy tasks',
-      alarmName: `${this.service.serviceName}-No-Healthy-Tasks`,
+      alarmDescription: 'Service health check failed',
+      alarmName: `${this.service.serviceName}-Health-Check-Failed`,
     });
 
     // Create SNS topic for alarms
@@ -441,20 +490,26 @@ export class FargateService extends Construct {
    * Grant permissions to the task role
    */
   public grantTaskRole(permissions: iam.PolicyStatement): void {
-    this.taskDefinition.taskRole.addToPolicy(permissions);
+    if (this.taskDefinition.taskRole) {
+      (this.taskDefinition.taskRole as iam.Role).addToPolicy(permissions);
+    }
   }
 
   /**
    * Grant permissions to the task execution role
    */
   public grantTaskExecutionRole(permissions: iam.PolicyStatement): void {
-    this.taskDefinition.executionRole.addToPolicy(permissions);
+    if (this.taskDefinition.executionRole) {
+      (this.taskDefinition.executionRole as iam.Role).addToPolicy(permissions);
+    }
   }
 
   /**
    * Update the service with a new task definition
    */
   public updateService(newTaskDefinition: ecs.FargateTaskDefinition): void {
-    this.service.attachToApplicationTargetGroup(this.targetGroup!);
+    if (this.targetGroup) {
+      this.service.attachToApplicationTargetGroup(this.targetGroup);
+    }
   }
 }
