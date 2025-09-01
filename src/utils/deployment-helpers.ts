@@ -10,7 +10,7 @@ import { Construct } from 'constructs';
 /**
  * Get environment-specific configuration from CDK context
  */
-export function getEnvironmentConfig(scope: Construct, environment: string): any {
+export function getEnvironmentConfig(scope: Construct, environment: string): Record<string, unknown> {
   return scope.node.tryGetContext(environment) || {};
 }
 
@@ -116,7 +116,7 @@ export function validateEnvironmentVariables(
  */
 export function getFargateConfig(
   environment: string,
-  config: any,
+  config: Record<string, unknown>,
   env: { [key: string]: string | undefined }
 ): {
   cpu: number;
@@ -125,11 +125,11 @@ export function getFargateConfig(
   maxCapacity: number;
 } {
   return {
-    cpu: parseInt(config.fargateCpu || env.FARGATE_CPU || '256'),
-    memory: parseInt(config.fargateMemory || env.FARGATE_MEMORY || '512'),
-    desiredCount: parseInt(config.desiredCount || env.DESIRED_COUNT || '1'),
+    cpu: parseInt((config.fargateCpu as string) || env.FARGATE_CPU || '256'),
+    memory: parseInt((config.fargateMemory as string) || env.FARGATE_MEMORY || '512'),
+    desiredCount: parseInt((config.desiredCount as string) || env.DESIRED_COUNT || '1'),
     maxCapacity: parseInt(
-      config.autoScalingMaxCapacity || env.AUTO_SCALING_MAX_CAPACITY || '5'
+      (config.autoScalingMaxCapacity as string) || env.AUTO_SCALING_MAX_CAPACITY || '5'
     ),
   };
 }

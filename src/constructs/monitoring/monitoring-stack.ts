@@ -4,6 +4,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { Construct } from 'constructs';
 
 export interface MonitoringStackProps extends cdk.StackProps {
@@ -157,7 +158,7 @@ export class MonitoringStack extends cdk.Stack {
    * Create a CPU utilization alarm
    */
   public createCpuAlarm(
-    service: any,
+    service: ecs.FargateService,
     threshold: number = 80,
     evaluationPeriods: number = 2
   ): cloudwatch.Alarm {
@@ -181,7 +182,7 @@ export class MonitoringStack extends cdk.Stack {
    * Create a memory utilization alarm
    */
   public createMemoryAlarm(
-    service: any,
+    service: ecs.FargateService,
     threshold: number = 80,
     evaluationPeriods: number = 2
   ): cloudwatch.Alarm {
@@ -205,7 +206,7 @@ export class MonitoringStack extends cdk.Stack {
    * Create a service health alarm
    */
   public createHealthAlarm(
-    service: any,
+    service: ecs.FargateService,
     metric: cloudwatch.IMetric,
     threshold: number = 1,
     evaluationPeriods: number = 1

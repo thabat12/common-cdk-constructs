@@ -146,7 +146,7 @@ export function validateEnvironmentConfig(
 export function createCdkContext(
   environment: string,
   config: EnvironmentConfig
-): { [key: string]: any } {
+): { [key: string]: EnvironmentConfig | string } {
   return {
     environment,
     [environment]: config,
